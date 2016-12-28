@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 from JAM.utils import util_fig
 from scipy.stats import binned_statistic_2d
+import re
 import warnings
 
 warnings.simplefilter("ignore")
@@ -23,6 +24,7 @@ MdarkPart = 6.3e6
 
 
 def snap2z(snapNum):
+    snapNum = np.atleast_1d(snapNum)
     z = [4.67730473e+01, 4.45622038e+01, 4.24536738e+01, 4.06395569e+01,
          3.87125594e+01, 3.68747395e+01, 3.51219704e+01, 3.36139397e+01,
          3.20120740e+01, 3.04843396e+01, 2.90273057e+01, 2.76377005e+01,
@@ -78,6 +80,40 @@ def snap2z(snapNum):
         return z[ii][0]
     else:
         return np.nan
+
+
+def extract_id(fname):
+    pat = re.compile(r'snap([-+]?\d+)-subhalo([-+]?\d+)')
+    search = pat.search(fname)
+    snapNum = search.group(1)
+    subhaloID = search.group(2)
+    return int(snapNum), int(subhaloID)
+
+
+def vel_center(xpart, vpart, mpart=None, R=15.0):
+    if mpart is None:
+        mpart = np.ones(xpart.shape[0], dtype=float)
+    r = np.sqrt(np.sum(xpart**2, axis=1))
+    iIn = r < R
+    return np.average(vpart[iIn], weights=mpart[iIn], axis=0)
+
+
+def find_center(xpart, mpart=None, percent=20.0):
+    if mpart is None:
+        mpart = np.ones(xpart.shape[0], dtype=float)
+    xcenter_old = np.average(xpart, axis=0, weights=mpart)
+    deltaD = 10.0
+    # iteratively find out the mass center
+    while deltaD > 0.01:
+        r = np.sqrt((xpart[:, 0]-xcenter_old[0])**2 +
+                    (xpart[:, 1]-xcenter_old[1])**2 +
+                    (xpart[:, 2]-xcenter_old[2])**2)
+        iIn = r < np.percentile(r, percent)
+        xcenter_new = \
+            np.average(xpart[iIn, :], axis=0, weights=mpart[iIn])
+        deltaD = np.sum((xcenter_new - xcenter_old)**2)**0.5
+        xcenter_old = xcenter_new
+    return xcenter_new
 
 
 def mock_img(x1, x2, L=None, bins=100, Xrange=None):
@@ -150,7 +186,8 @@ class cutout(object):
                 np.ones_like(data_dark['ParticleIDs'][:], dtype=float)
 
 
-def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None):
+def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
+                   **kwargs):
     '''
     plot image and los vel
     '''
@@ -158,7 +195,7 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None):
     axis = ['x', 'y', 'z']
     fig, axes = plt.subplots(2, 3, figsize=(9, 6))
     fig.subplots_adjust(left=0.12, bottom=0.1, right=0.9,
-                        top=0.95, hspace=0.2, wspace=0.3)
+                        top=0.95, hspace=0.2, wspace=0.4)
     if box is None:
         box = np.percentile(xpart, [5, 95], axis=0)
     for i, j, los, k in projection:
@@ -175,6 +212,17 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None):
                      Xrange=Xrange)
         axes[0, k].imshow(np.rot90(np.log10(img)), extent=extent,
                           cmap='gray')
+        # over plot contours
+        x1 = np.linspace(Xrange[0][0]/1e3, Xrange[0][1]/1e3, bins)
+        x2 = np.linspace(Xrange[1][0]/1e3, Xrange[1][1]/1e3, bins)
+        X1, X2 = np.meshgrid(x1, x2, indexing='ij')
+        good = ~np.isnan(img)
+        Imax = np.percentile(img[good].max(), 99.5)
+        levels = Imax * 10**(-0.4*np.arange(0, magrange, 0.5))
+        levels = levels[::-1]
+        axes[0, k].contour(X1, X2, img, levels=levels,
+                           linestyles='solid', **kwargs)
+
         good = ~np.isnan(vel)
         vmax = np.percentile(abs(vel[good]), 95)
         norm = colors.Normalize(vmin=-vmax, vmax=vmax)
@@ -188,9 +236,10 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None):
                               fig=fig, width=0.01)
         util_fig.set_labels(axes[0, k], xrotate=45)
         util_fig.set_labels(axes[1, k], xrotate=45)
-        axes[1, k].set_xlabel('Mpc', fontproperties=util_fig.label_font)
-    axes[0, 0].set_ylabel('Mpc', fontproperties=util_fig.label_font)
-    axes[1, 0].set_ylabel('Mpc', fontproperties=util_fig.label_font)
+        axes[1, k].set_xlabel(r'$\rm cMpc/h_0$',
+                              fontproperties=util_fig.label_font)
+    axes[0, 0].set_ylabel(r'$\rm cMpc/h_0$', fontproperties=util_fig.label_font)
+    axes[1, 0].set_ylabel(r'$\rm cMpc/h_0$', fontproperties=util_fig.label_font)
     return fig, axes
 
 
@@ -253,8 +302,9 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100,
                      transform=axes[k].transAxes,
                      fontproperties=util_fig.label_font)
         util_fig.set_labels(axes[k], xrotate=45)
-        axes[k].set_xlabel('Mpc', fontproperties=util_fig.label_font)
-    axes[0].set_ylabel('Mpc', fontproperties=util_fig.label_font)
+        axes[k].set_xlabel(r'$\rm cMpc/h_0$',
+                           fontproperties=util_fig.label_font)
+    axes[0].set_ylabel(r'$\rm cMpc/h_0$', fontproperties=util_fig.label_font)
     return fig, axes
 
 

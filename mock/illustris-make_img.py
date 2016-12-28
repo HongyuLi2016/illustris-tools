@@ -7,6 +7,9 @@ from glob import glob
 import os
 import sys
 import util_illustris as ui
+import warnings
+
+warnings.simplefilter("ignore")
 
 
 def make_img(x, L, scale=0.5, boxsize=50.0):
@@ -42,10 +45,10 @@ if __name__ == '__main__':
         print 'Error - No hdf5 particle file in {}'.format(path)
 
     # read particle coordinates
-    xpart_old_star = ui.read_cutout(cutoutName[0], PartType=4,
-                                    key='Coordinates')
-    vpart_old_star = ui.read_cutout(cutoutName[0], PartType=4,
-                                    key='Velocities')
+    xpart_star = ui.read_cutout(cutoutName[0], PartType=4,
+                                key='Coordinates')
+    vpart_star = ui.read_cutout(cutoutName[0], PartType=4,
+                                key='Velocities')
     mpart_star = ui.read_cutout(cutoutName[0], PartType=4,
                                 key='Masses')
     Meta = ui.read_cutout(cutoutName[0], PartType=4,
@@ -53,6 +56,11 @@ if __name__ == '__main__':
     lpart = ui.read_cutout(cutoutName[0], PartType=4,
                            key='GFM_StellarPhotometrics')
     lrpart = 10**((4.58 - lpart[:, 5])/2.5)/1e10  # r band luminosity
+    xcenter_star = ui.find_center(xpart_star, mpart=mpart_star, percent=20.0)
+    xpart_star -= xcenter_star
+    vsys_star = ui.vel_center(xpart_star, vpart_star, mpart=mpart_star, R=10.0)
+    vpart_star -= vsys_star
+    '''
     deltaD = 10.0
     old_massCenterStar = np.average(xpart_old_star, axis=0, weights=mpart_star)
     xpart_old_star -= old_massCenterStar
@@ -77,36 +85,26 @@ if __name__ == '__main__':
         # plt.hist(xpart_old_star[:,1],bins=100)
         # plt.hist(xpart_old_star[:,2],bins=100)
         # plt.show()
+    '''
 
-    rstar = (xpart_old_star[:, 0]**2 + xpart_old_star[:, 1]**2 +
-             xpart_old_star[:, 2]**2)**0.5
-    iInStar = rstar < 5.0
-    vsysStar = np.average(vpart_old_star[iInStar, :], axis=0,
-                          weights=mpart_star[iInStar])
-    vpart_old_star -= vsysStar
-
-    xpart_old_dark = ui.read_cutout(cutoutName[0],
-                                    PartType=1, key='Coordinates')
-    vpart_old_dark = ui.read_cutout(cutoutName[0],
-                                    PartType=1, key='Velocities')
-    massCenterDark = np.average(xpart_old_dark, axis=0)
-    xpart_old_dark -= massCenterDark
-    rdark = (xpart_old_dark[:, 0]**2 + xpart_old_dark[:, 1]**2 +
-             xpart_old_dark[:, 2]**2)**0.5
-    iInDark = rdark < 10.0
-    vsysDark = np.average(vpart_old_dark[iInDark, :], axis=0)
+    xpart_dark = ui.read_cutout(cutoutName[0], PartType=1, key='Coordinates')
+    vpart_dark = ui.read_cutout(cutoutName[0], PartType=1, key='Velocities')
+    xcenter_dark = ui.find_center(xpart_dark, percent=20.0)
+    xpart_dark -= xcenter_dark
+    vsys_dark = ui.vel_center(xpart_dark, vpart_dark, R=10.0)
+    vpart_dark -= vsys_dark
 
     # difference between halo and galaxy
-    centerDiff = massCenterDark - massCenterStar
-    vsysDiff = vsysDark - vsysStar
+    centerDiff = xcenter_dark - xcenter_star
+    vsysDiff = vsys_dark - vsys_star
 
     # get galaxy shape and axis
-    ba, ca, angle, Tiv = ui.get_shape(xpart_old_star, mpart_star, Rb=10.)
+    ba, ca, angle, Tiv = ui.get_shape(xpart_star, mpart_star, Rb=10.)
 
     # coordinates in 3-axis-system
     # positions and velocities in 3 axis coordinate system
-    xpart_axis = np.dot(Tiv, xpart_old_star.T).T
-    vpart_axis = np.dot(Tiv, vpart_old_star.T).T
+    xpart_axis = np.dot(Tiv, xpart_star.T).T
+    vpart_axis = np.dot(Tiv, vpart_star.T).T
 
     # rotate by the phi alone z axis and then by the inclination
     # alone new x axis
