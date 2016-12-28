@@ -3,9 +3,11 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import colors
 import pyfits
 from optparse import OptionParser
 from JAM.utils.velocity_plot import velocity_plot
+from scipy import stats
 
 
 def v_plot(path):
@@ -24,7 +26,7 @@ def v_plot(path):
     ii = np.where(r < 3.0)
     mv0 = np.mean(v0[ii])
     vel = v0-mv0
-    good = (vel**2+vd**2)**0.5 < 400.
+    good = (vel**2+vd**2)**0.5 < 800.
     x0 = x0[good]
     y0 = y0[good]
     vel = vel[good]
@@ -37,17 +39,24 @@ def v_plot(path):
                         top=0.98, wspace=0.6, hspace=0.01)
 
     ax1 = fig.add_subplot(2, 2, 1)
-    velocity_plot(x0, y0, vel.clip(-300, 300.), markersize=0.2,
-                  ax=ax1, text='$\mathbf{V^{*}}$', equal=True)
+    nans = np.isnan(vel)
+    vmax = stats.scoreatpercentile(vel[~nans], 98.0)
+    norm = colors.Normalize(vmin=-vmax, vmax=vmax)
+    velocity_plot(x0, y0, vel, markersize=0.2, norm=norm,
+                  ax=ax1, text='$\mathbf{V^{*}}$', equal=True,
+                  xreverse=False)
     ax2 = fig.add_subplot(2, 2, 2)
-    velocity_plot(x0, y0, v0_err.clip(-100., 100.), markersize=0.2,
-                  ax=ax2, text='$\mathbf{V^{*}_{err}}$', equal=True)
+    velocity_plot(x0, y0, v0_err.clip(0., 100.), markersize=0.2,
+                  ax=ax2, text='$\mathbf{V^{*}_{err}}$', equal=True,
+                  xreverse=False)
     ax3 = fig.add_subplot(2, 2, 3)
-    velocity_plot(x0, y0, vd.clip(0, 300.), markersize=0.2,
-                  ax=ax3, text='$\mathbf{\sigma^{*}}$')
+    velocity_plot(x0, y0, vd.clip(0, 600.), markersize=0.2,
+                  ax=ax3, text='$\mathbf{\sigma^{*}}$',
+                  xreverse=False)
     ax4 = fig.add_subplot(2, 2, 4)
     velocity_plot(x0, y0, vd_err.clip(0, 100.), markersize=0.2,
-                  ax=ax4, text='$\mathbf{\sigma^{*}_{err}}$')
+                  ax=ax4, text='$\mathbf{\sigma^{*}_{err}}$',
+                  xreverse=False)
     fig.savefig('%s/ifu/IFU.png'%path, dpi=300)
 
 if __name__ == '__main__':

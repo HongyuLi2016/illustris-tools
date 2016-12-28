@@ -21,6 +21,7 @@ def make_img(x, L, scale=0.5, boxsize=50.0):
         i = int(np.rint(x[n, 0]/scale) + int(ngrid/2))
         k = int(np.rint(x[n, 2]/scale) + int(ngrid/2))
         if i >= 0 and i < ngrid and k >= 0 and k < ngrid:
+            # axis=1 -> x  axis=0 ->z
             img[k, i] += L[n]
     return img
 
@@ -36,7 +37,7 @@ if __name__ == '__main__':
         print 'Error - please provide a folder name'
         sys.exit(1)
     path = args[0]
-    cutoutName = glob('{}/cutout_*.hdf5'.format(path))
+    cutoutName = glob('{}/cutout*.hdf5'.format(path))
     if len(cutoutName) != 1:
         print 'Error - No hdf5 particle file in {}'.format(path)
 
@@ -139,7 +140,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(1, 1, 1)
-    ax.imshow(np.log10(img_M), origin='upper',
+    ax.imshow(np.log10(img_M), origin='lower',
               extent=(-boxsize_img/2, boxsize_img/2, -boxsize_img/2,
                       boxsize_img/2))
     ax.set_xlabel('kpc')
@@ -148,7 +149,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(1, 1, 1)
-    ax.imshow(np.log10(img_L), origin='upper',
+    ax.imshow(np.log10(img_L), origin='lower',
               extent=(-boxsize_img/2, boxsize_img/2, -boxsize_img/2,
                       boxsize_img/2))
     ax.set_xlabel('kpc')
@@ -157,7 +158,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(1, 1, 1)
-    ax.imshow(np.log10(img_ifu), origin='upper',
+    ax.imshow(np.log10(img_ifu), origin='lower',
               extent=(-boxsize_ifu/2, boxsize_ifu/2, -boxsize_ifu/2,
                       boxsize_ifu/2))
     ax.set_xlabel('kpc')
@@ -180,6 +181,7 @@ if __name__ == '__main__':
                      .format(centerDiff[0], centerDiff[1], centerDiff[2]))
         print >>ff, ('System velocity offset: {:.2f} {:.2f} {:.2f} km/s'
                      .format(vsysDiff[0], vsysDiff[1], vsysDiff[2]))
+        print >>ff, 'ba={:.2f}  ca={:.2f}'.format(ba, ca)
     # x in kpc, v in km/s, mpart_star in 10^10 M_solar, lrpart in 10^10 L_solar
     data = np.zeros([xpart.shape[0], 9])
     data[:, 0:3] = xpart

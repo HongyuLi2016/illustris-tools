@@ -91,11 +91,10 @@ if __name__ == '__main__':
                        path='%s/mge/'%path)
 
     print 'total mass: %.4e'%(sol[:, 0].sum()*1e10)
-    sol[:, 1] *= pix2arcsec
-    sol[:, 0] = sol[:, 0]/(2*np.pi*sol[:, 1]**2*sol[:, 2])
     ml = 5.0  # mock stellar mass-to-light ratio
-    # sol[:,0]*=1e10/(500.0**2)/ml
-    sol[:, 0] *= 1e10/((pix2kpc*1e3)**2)/ml
+    sol[:, 1] *= pix2arcsec
+    sol[:, 0] = sol[:, 0]*1e10 / \
+        (2*np.pi*(sol[:, 1]/kpc2arcsec*1e3)**2*sol[:, 2]) / ml
 
     ff = open('%s/mge/mge.dat'%path, 'w+')
     print >>ff, 'Pa: %5.2f'%pa
