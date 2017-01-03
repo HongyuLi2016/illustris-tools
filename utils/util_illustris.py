@@ -83,10 +83,16 @@ def snap2z(snapNum):
 
 
 def extract_id(fname):
-    pat = re.compile(r'snap([-+]?\d+)-subhalo([-+]?\d+)')
-    search = pat.search(fname)
-    snapNum = search.group(1)
-    subhaloID = search.group(2)
+    try:
+        pat = re.compile(r'snap([-+]?\d+)-subhalo([-+]?\d+)')
+        search = pat.search(fname)
+        snapNum = search.group(1)
+        subhaloID = search.group(2)
+    except:
+        pat = re.compile(r'snap([-+]?\d+)-halo([-+]?\d+)')
+        search = pat.search(fname)
+        snapNum = search.group(1)
+        subhaloID = search.group(2)
     return int(snapNum), int(subhaloID)
 
 
@@ -187,7 +193,7 @@ class cutout(object):
 
 
 def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
-                   **kwargs):
+                   xmark=None, **kwargs):
     '''
     plot image and los vel
     '''
@@ -206,15 +212,15 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
             mock_img(xpart[:, i], xpart[:, j], L=mpart,
                      bins=bins, Xrange=Xrange)
         extent = np.array([x1edge[0], x1edge[-1],
-                           x2edge[0], x2edge[-1]]) / 1e3
+                           x2edge[0], x2edge[-1]])
         vel, x1edge, x2edge = \
             mock_ifu(xpart[:, i], xpart[:, j], vpart[:, los], bins=100,
                      Xrange=Xrange)
         axes[0, k].imshow(np.rot90(np.log10(img)), extent=extent,
                           cmap='gray')
         # over plot contours
-        x1 = np.linspace(Xrange[0][0]/1e3, Xrange[0][1]/1e3, bins)
-        x2 = np.linspace(Xrange[1][0]/1e3, Xrange[1][1]/1e3, bins)
+        x1 = np.linspace(Xrange[0][0], Xrange[0][1], bins)
+        x2 = np.linspace(Xrange[1][0], Xrange[1][1], bins)
         X1, X2 = np.meshgrid(x1, x2, indexing='ij')
         good = ~np.isnan(img)
         Imax = np.percentile(img[good].max(), 99.5)
@@ -222,6 +228,10 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
         levels = levels[::-1]
         axes[0, k].contour(X1, X2, img, levels=levels,
                            linestyles='solid', **kwargs)
+        # mark some points
+        if xmark is not None:
+            xmark = np.atleast_2d(xmark)
+            axes[0, k].plot(xmark[:, i], xmark[:, j], '+r', markersize=5,)
 
         good = ~np.isnan(vel)
         vmax = np.percentile(abs(vel[good]), 95)
@@ -236,15 +246,16 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
                               fig=fig, width=0.01)
         util_fig.set_labels(axes[0, k], xrotate=45)
         util_fig.set_labels(axes[1, k], xrotate=45)
-        axes[1, k].set_xlabel(r'$\rm cMpc/h_0$',
+        axes[1, k].set_xlabel(r'$\rm cKpc/h_0$',
                               fontproperties=util_fig.label_font)
-    axes[0, 0].set_ylabel(r'$\rm cMpc/h_0$', fontproperties=util_fig.label_font)
-    axes[1, 0].set_ylabel(r'$\rm cMpc/h_0$', fontproperties=util_fig.label_font)
+    axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
+    axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
     return fig, axes
 
 
-def cutout_vel_vector(xpart, vpart, mpart, bins=100,
-                      ifu_bins=50, box=None, **kwargs):
+def cutout_vel_vector(xpart, vpart, mpart, bins=100, ifu_bins=50, box=None,
+                      magrange=5, linewidths=0.3, contoursColor='c', xmark=None,
+                      **kwargs):
     '''
     plot img and vector v feild
     box: 2*3 array, boundary of the box within witch img and vmap will be
@@ -253,9 +264,9 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100,
     projection = [(0, 1, 2, 0), (0, 2, 1, 1), (1, 2, 0, 2)]
     axis = ['x', 'y', 'z']
 
-    fig, axes = plt.subplots(1, 3, figsize=(9, 4))
-    fig.subplots_adjust(left=0.08, bottom=0.08, right=0.98,
-                        top=0.95, hspace=0.2, wspace=0.3)
+    fig, axes = plt.subplots(2, 3, figsize=(9, 6))
+    fig.subplots_adjust(left=0.12, bottom=0.1, right=0.9,
+                        top=0.95, hspace=0.2, wspace=0.4)
     if box is None:
         box = np.percentile(xpart, [5, 95], axis=0)
     for i, j, los, k in projection:
@@ -266,13 +277,30 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100,
             mock_img(xpart[:, i], xpart[:, j], L=mpart,
                      bins=bins, Xrange=Xrange)
         extent = np.array([x1edge[0], x1edge[-1],
-                           x2edge[0], x2edge[-1]]) / 1e3
+                           x2edge[0], x2edge[-1]])
 
-        # plot images
-        axes[k].imshow(np.rot90(np.log10(img)), extent=extent,
-                       cmap='gray', zorder=0)
+        axes[0, k].imshow(np.rot90(np.log10(img)), extent=extent,
+                          cmap='gray')
+        axes[1, k].imshow(np.rot90(np.log10(img)), extent=extent,
+                          cmap='gray', zorder=0)
 
-        # make velocity feild
+        # over plot contours
+        x1 = np.linspace(Xrange[0][0], Xrange[0][1], bins)
+        x2 = np.linspace(Xrange[1][0], Xrange[1][1], bins)
+        X1, X2 = np.meshgrid(x1, x2, indexing='ij')
+        good = ~np.isnan(img)
+        Imax = np.percentile(img[good].max(), 99.5)
+        levels = Imax * 10**(-0.4*np.arange(0, magrange, 0.5))
+        levels = levels[::-1]
+        axes[0, k].contour(X1, X2, img, levels=levels,
+                           linestyles='solid', linewidths=linewidths,
+                           colors=contoursColor)
+
+        # mark some points
+        if xmark is not None:
+            xmark = np.atleast_2d(xmark)
+            axes[0, k].plot(xmark[:, i], xmark[:, j], '+r', markersize=5,)
+        # over plot velocity feild
         vel_x1, v1edge_star, v2edge_star = \
             mock_ifu(xpart[:, i], xpart[:, j], vpart[:, i], bins=ifu_bins,
                      Xrange=Xrange)
@@ -288,23 +316,25 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100,
         vmax = np.percentile(abs(vel_los[good]), 95)
         norm = colors.Normalize(vmin=-vmax, vmax=vmax)
 
-        x1 = np.linspace(Xrange[0][0]/1e3, Xrange[0][1]/1e3, ifu_bins)
-        x2 = np.linspace(Xrange[1][0]/1e3, Xrange[1][1]/1e3, ifu_bins)
+        x1 = np.linspace(Xrange[0][0], Xrange[0][1], ifu_bins)
+        x2 = np.linspace(Xrange[1][0], Xrange[1][1], ifu_bins)
         X1, X2 = np.meshgrid(x1, x2, indexing='ij')
 
         color = vel_los
-        axes[k].quiver(X1, X2, vel_x1, vel_x2, color, norm=norm,
-                       cmap=util_fig.sauron, units='inches', width=0.01,
-                       pivot='tip', zorder=1, **kwargs)
+        axes[1, k].quiver(X1, X2, vel_x1, vel_x2, color, norm=norm,
+                          cmap=util_fig.sauron, units='inches', width=0.01,
+                          pivot='tip', zorder=1, **kwargs)
 
         # add text
-        axes[k].text(0.1, 0.9, '{}{}'.format(axis[i], axis[j]),
-                     transform=axes[k].transAxes,
-                     fontproperties=util_fig.label_font)
-        util_fig.set_labels(axes[k], xrotate=45)
-        axes[k].set_xlabel(r'$\rm cMpc/h_0$',
-                           fontproperties=util_fig.label_font)
-    axes[0].set_ylabel(r'$\rm cMpc/h_0$', fontproperties=util_fig.label_font)
+        axes[1, k].text(0.1, 0.9, '{}{}'.format(axis[i], axis[j]),
+                        transform=axes[0, k].transAxes,
+                        fontproperties=util_fig.label_font)
+        util_fig.set_labels(axes[0, k], xrotate=45)
+        util_fig.set_labels(axes[1, k], xrotate=45)
+        axes[1, k].set_xlabel(r'$\rm cKpc/h_0$',
+                              fontproperties=util_fig.label_font)
+    axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
+    axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
     return fig, axes
 
 
@@ -409,3 +439,10 @@ def http_get(path, params=None):
         return filename  # return the filename string
 
     return r
+
+
+def http_info2dict(info):
+    dictionary = {}
+    for key in info.keys():
+        dictionary[key] = info[key]
+    return dictionary

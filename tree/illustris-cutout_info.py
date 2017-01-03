@@ -11,6 +11,10 @@ parser.add_option('-s', action='store', type='float', dest='size',
                   default=20.0, help='inclination')
 parser.add_option('-r', action='store_true', dest='rotate',
                   default=False, help='rotate to principle axis coordinates')
+parser.add_option('-l', action='store_true', dest='los',
+                  default=False, help='make los velocity plot')
+parser.add_option('-c', action='store_true', dest='cmark',
+                  default=False, help='make los velocity plot')
 (options, args) = parser.parse_args()
 if len(args) != 1:
     print 'Error - please provide a folder name'
@@ -29,13 +33,13 @@ cutout = ui.cutout('{}/cutout.hdf5'.format(args[0]))
 vpart_star = cutout.vpart_star
 xpart_star = cutout.xpart_star
 mpart_star = cutout.mass_star
-xcenter_star = ui.find_center(xpart_star, mpart=mpart_star)
+xcenter_star = ui.find_center(xpart_star, mpart=mpart_star, percent=10)
 
 vpart_dark = cutout.vpart_dark
 xpart_dark = cutout.xpart_dark
 mpart_dark = cutout.mass_dark
 
-xcenter_dark = ui.find_center(xpart_dark, mpart=mpart_dark)
+xcenter_dark = ui.find_center(xpart_dark, mpart=mpart_dark, percent=10)
 
 center_offset = xcenter_star - xcenter_dark
 
@@ -50,7 +54,15 @@ xpart_star -= xcenter_star
 xpart_dark -= xcenter_star
 vpart_star -= vcenter_star
 vpart_dark -= vcenter_dark
+# mark a potision on the image
+xmark_star = np.array([[18612.98,  68966.09,  3290.10],
+                       [18624.92,  68963.44,  3273.73]])
+xmark_star = np.array([52143.1,  36207.2,  24010.1])
+xmark_star -= xcenter_star
+if not options.cmark:
+    xmark_star = None
 
+i_projection = [(0, 1, 0), (0, 2, 1), (1, 2, 2)]
 if options.rotate:
     ba, ca, angle, Tiv = \
         ui.get_shape(xpart_star, mpart_star, Rb=20., decrease=True)
@@ -59,22 +71,29 @@ if options.rotate:
     xpart_dark = np.dot(Tiv, xpart_dark.T).T
     vpart_dark = np.dot(Tiv, vpart_dark.T).T
 
+
 fig_star, axes_star = ui.cutout_vel_vector(xpart_star, vpart_star, mpart_star,
-                                           alpha=0.7, headlength=6.0, box=box)
+                                           alpha=0.7, headlength=6.0, box=box,
+                                           ifu_bins=50, xmark=xmark_star)
 fig_star.savefig('{}/info/vel_vector_star.png'.format(args[0]), dpi=500)
 
 fig_dark, axes_dark = ui.cutout_vel_vector(xpart_dark, vpart_dark, mpart_dark,
-                                           alpha=0.7, headlength=6.0, box=box)
+                                           alpha=0.7, headlength=6.0, box=box,
+                                           ifu_bins=50, magrange=3,
+                                           xmark=xmark_star)
 fig_dark.savefig('{}/info/vel_vector_dark.png'.format(args[0]), dpi=500)
 
 
-fig_star, axes_star = ui.cutout_vel_los(xpart_star, vpart_star, mpart_star,
-                                        box=box, linewidths=0.5, colors='c')
-fig_star.savefig('{}/info/vel_los_star.png'.format(args[0]), dpi=500)
+if options.los:
+    fig_star, axes_star = ui.cutout_vel_los(xpart_star, vpart_star, mpart_star,
+                                            box=box, linewidths=0.5,
+                                            colors='c', xmark=xmark_star)
+    fig_star.savefig('{}/info/vel_los_star.png'.format(args[0]), dpi=500)
 
-fig_dark, axes_dark = ui.cutout_vel_los(xpart_dark, vpart_dark, mpart_dark,
-                                        box=box, linewidths=0.3, colors='c')
-fig_dark.savefig('{}/info/vel_los_dark.png'.format(args[0]), dpi=500)
+    fig_dark, axes_dark = ui.cutout_vel_los(xpart_dark, vpart_dark, mpart_dark,
+                                            box=box, linewidths=0.3,
+                                            colors='c', xmark=xmark_star)
+    fig_dark.savefig('{}/info/vel_los_dark.png'.format(args[0]), dpi=500)
 
 with open('{}/info/cutoutInfo.txt'.format(args[0]), 'w') as ff:
     ff.write('SnapNum: {}\n'.format(snapNum))
