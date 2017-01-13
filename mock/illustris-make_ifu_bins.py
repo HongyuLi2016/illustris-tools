@@ -4,6 +4,8 @@ read img_ifu.npy (particel number map), mge.npy (mge fitting)
 and img_M.npy (mass image) to create voronoi bin for IFU
 '''
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Circle
 from optparse import OptionParser

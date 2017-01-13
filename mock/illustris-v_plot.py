@@ -2,6 +2,8 @@
 import os
 import sys
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import pyfits

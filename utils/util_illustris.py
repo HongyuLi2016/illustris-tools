@@ -2,6 +2,8 @@ import numpy as np
 import h5py
 import numpy.linalg as LA
 import requests
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from JAM.utils import util_fig

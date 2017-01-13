@@ -3,8 +3,8 @@ import os, sys, glob, math, time
 from optparse import OptionParser
 
 import numpy as np
-# import matplotlib
-# matplotlib.use("Agg")
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from scipy.spatial import cKDTree
