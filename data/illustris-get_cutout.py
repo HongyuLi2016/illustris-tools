@@ -37,7 +37,19 @@ with open('snap{}-subhalo{}/info.dat'.format(snapNum, subID), 'wb') as f:
 with open('snap{}-subhalo{}/haloInfo.dat'.format(snapNum, subID), 'wb') as f:
     pickle.dump(haloInfo_dict, f)
 
-saved_filename = ui.http_get(cutout_url)
-os.system('mv {} snap{}-subhalo{}/cutout.hdf5'
-          .format(saved_filename, snapNum, subID))
-print 'Download snap{}-subhalo{} success!'.format(snapNum, subID)
+success = False
+try_num = 0
+f = open('snap{}-subhalo{}/download.log'.format(snapNum, subID), 'w')
+while not success:
+    try:
+        if try_num > 5:
+            break
+        try_num += 1
+        saved_filename = ui.http_get(cutout_url)
+        success = True
+        os.system('mv {} snap{}-subhalo{}/cutout.hdf5'
+                  .format(saved_filename, snapNum, subID))
+        print>>f, 'Download snap{}-subhalo{} success!'.format(snapNum, subID)
+    except:
+        print>>f, 'Try {} failed!'.format(try_num)
+f.close()
