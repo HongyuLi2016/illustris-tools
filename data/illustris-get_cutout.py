@@ -26,8 +26,16 @@ cutout_url = ui.http_get(url)['cutouts']['subhalo']
 info_url = ui.http_get(url)['meta']['info']
 info = ui.http_get(info_url)
 info_dict = ui.http_info2dict(info)
+
+parentHaloUrl = ui.http_get(url)['related']['parent_halo']
+parentHaloInfoUrl = ui.http_get(parentHaloUrl)['meta']['info']
+haloInfo = ui.http_get(parentHaloInfoUrl)
+haloInfo_dict = ui.http_info2dict(haloInfo)
+
 with open('snap{}-subhalo{}/info.dat'.format(snapNum, subID), 'wb') as f:
     pickle.dump(info_dict, f)
+with open('snap{}-subhalo{}/haloInfo.dat'.format(snapNum, subID), 'wb') as f:
+    pickle.dump(haloInfo_dict, f)
 
 saved_filename = ui.http_get(cutout_url)
 os.system('mv {} snap{}-subhalo{}/cutout.hdf5'
