@@ -37,6 +37,8 @@ if __name__ == '__main__':
                       default=45.0, help='inclination')
     parser.add_option('-p', action='store', type='float', dest='phi',
                       default=0.0, help='phi')
+    parser.add_option('-o', action='store_true', dest='oblate',
+                      default=False, help='oblate rotation')
     (options, args) = parser.parse_args()
     if len(args) != 1:
         print 'Error - please provide a folder name'
@@ -111,13 +113,26 @@ if __name__ == '__main__':
     # rotate by the phi alone z axis and then by the inclination
     # alone new x axis
     # left hand system, with y point to LOS when edge on
-    phi = options.phi / 180.0 * np.pi
-    inc = (90.0 - options.i) / 180.0 * np.pi  # i =90 => edge-on
-    M_rot_phi = np.array([[np.cos(phi), -np.sin(phi), 0],
-                          [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
-    M_rot_inc = np.array([[1, 0, 0], [0, np.cos(inc), -np.sin(inc)],
-                          [0, np.sin(inc), np.cos(inc)]])
-    M_rot = np.dot(M_rot_inc, M_rot_phi)
+    if options.oblate:
+        phi = options.phi / 180.0 * np.pi
+        inc = (90.0 - options.i) / 180.0 * np.pi  # i =90 => edge-on
+        M_rot_phi = np.array([[np.cos(phi), -np.sin(phi), 0],
+                              [np.sin(phi), np.cos(phi), 0],
+                              [0, 0, 1]])
+        M_rot_inc = np.array([[1, 0, 0],
+                              [0, np.cos(inc), -np.sin(inc)],
+                              [0, np.sin(inc), np.cos(inc)]])
+        M_rot = np.dot(M_rot_inc, M_rot_phi)
+    else:
+        phi = (90.0 - options.i) / 180.0 * np.pi  # i =90 => edge-on
+        inc = options.phi / 180.0 * np.pi
+        M_rot_phi = np.array([[np.cos(phi), -np.sin(phi), 0],
+                              [np.sin(phi), np.cos(phi), 0],
+                              [0, 0, 1]])
+        M_rot_inc = np.array([[1, 0, 0],
+                              [0, np.cos(inc), -np.sin(inc)],
+                              [0, np.sin(inc), np.cos(inc)]])
+        M_rot = np.dot(M_rot_phi, M_rot_inc)
     # positions and velocities in mock obs system
     xpart = np.dot(M_rot, xpart_axis.T).T
     vpart = np.dot(M_rot, vpart_axis.T).T
