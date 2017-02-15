@@ -69,10 +69,10 @@ if __name__ == '__main__':
 
     c1 = pyfits.Column(name='xbin', format='D', array=bin_X)
     c2 = pyfits.Column(name='ybin', format='D', array=bin_Y)
-    c3 = pyfits.Column(name='v0', format='D', array=gh_v0)
-    c4 = pyfits.Column(name='v0_err', format='D', array=gh_v0_err)
-    c5 = pyfits.Column(name='vd', format='D', array=gh_vd)
-    c6 = pyfits.Column(name='vd_err', format='D', array=gh_vd_err)
+    c3 = pyfits.Column(name='v0', format='D', array=v0)
+    c4 = pyfits.Column(name='v0_err', format='D', array=v0_err)
+    c5 = pyfits.Column(name='vd', format='D', array=vd)
+    c6 = pyfits.Column(name='vd_err', format='D', array=vd_err)
     c7 = pyfits.Column(name='metal', format='D', array=metal)
 
     c12 = pyfits.Column(name='rebin_x', format='D', array=spax_bin_X)
