@@ -22,9 +22,9 @@ def make_img(x, L, scale=0.5, boxsize=50.0):
     ngrid = int(boxsize/scale)
     img = np.zeros([ngrid, ngrid])
     for n in range(len(x)):
-        # assume y is LOS
+        # assume z is LOS
         i = int(np.rint(x[n, 0]/scale) + int(ngrid/2))
-        k = int(np.rint(x[n, 2]/scale) + int(ngrid/2))
+        k = int(np.rint(x[n, 1]/scale) + int(ngrid/2))
         if i >= 0 and i < ngrid and k >= 0 and k < ngrid:
             # axis=1 -> x  axis=0 ->z
             img[k, i] += L[n]
@@ -34,9 +34,9 @@ def make_img(x, L, scale=0.5, boxsize=50.0):
 if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('-i', action='store', type='float', dest='i',
-                      default=45.0, help='inclination')
+                      default=np.nan, help='inclination')
     parser.add_option('-p', action='store', type='float', dest='phi',
-                      default=0.0, help='phi')
+                      default=np.nan, help='phi')
     parser.add_option('-o', action='store_true', dest='oblate',
                       default=False, help='oblate rotation')
     (options, args) = parser.parse_args()
@@ -105,37 +105,46 @@ if __name__ == '__main__':
     # get galaxy shape and axis
     ba, ca, angle, Tiv = ui.get_shape(xpart_star, mpart_star, Rb=10.)
 
-    # coordinates in 3-axis-system
-    # positions and velocities in 3 axis coordinate system
-    xpart_axis = np.dot(Tiv, xpart_star.T).T
-    vpart_axis = np.dot(Tiv, vpart_star.T).T
+    if np.isnan(options.phi) and not np.isnan(options.i):
+        raise RuntimeError('phi must be provided')
+    elif not np.isnan(options.phi) and np.isnan(options.i):
+        raise RuntimeError('i must be provided')
+    elif not np.isnan(options.phi) and not np.isnan(options.i):
+        print 'Rotate to 3-axis-system'
+        # coordinates in 3-axis-system
+        # positions and velocities in 3 axis coordinate system
+        xpart_axis = np.dot(Tiv, xpart_star.T).T
+        vpart_axis = np.dot(Tiv, vpart_star.T).T
 
-    # rotate by the phi alone z axis and then by the inclination
-    # alone new x axis
-    # left hand system, with y point to LOS when edge on
-    if options.oblate:
-        phi = options.phi / 180.0 * np.pi
-        inc = (90.0 - options.i) / 180.0 * np.pi  # i =90 => edge-on
-        M_rot_phi = np.array([[np.cos(phi), -np.sin(phi), 0],
-                              [np.sin(phi), np.cos(phi), 0],
-                              [0, 0, 1]])
-        M_rot_inc = np.array([[1, 0, 0],
-                              [0, np.cos(inc), -np.sin(inc)],
-                              [0, np.sin(inc), np.cos(inc)]])
-        M_rot = np.dot(M_rot_inc, M_rot_phi)
+        # rotate by the phi alone z axis and then by the inclination
+        # alone new x axis
+        # left hand system, with y point to LOS when edge on
+        if options.oblate:
+            phi = options.phi / 180.0 * np.pi
+            inc = options.i / 180.0 * np.pi  # i =90 => edge-on
+            M_rot_z = np.array([[np.cos(phi), -np.sin(phi), 0],
+                                [np.sin(phi), np.cos(phi), 0],
+                                [0, 0, 1]])
+            M_rot_x = np.array([[1, 0, 0],
+                                [0, np.cos(inc), -np.sin(inc)],
+                                [0, np.sin(inc), np.cos(inc)]])
+            M_rot = np.dot(M_rot_x, M_rot_z)
+        else:
+            inc = (90-options.i) / 180.0 * np.pi  # i =90 => edge-on
+            phi = options.phi / 180.0 * np.pi
+            M_rot_y = np.array([[np.cos(inc), -np.sin(inc), 0],
+                                [0, 0, 1],
+                               [np.sin(inc), np.cos(inc), 0]])
+            M_rot_x = np.array([[1, 0, 0],
+                                [0, np.cos(phi), -np.sin(phi)],
+                                [0, np.sin(phi), np.cos(phi)]])
+            M_rot = np.dot(M_rot_y, M_rot_x)
+        # positions and velocities in mock obs system
+        xpart = np.dot(M_rot, xpart_axis.T).T
+        vpart = np.dot(M_rot, vpart_axis.T).T
     else:
-        phi = (90.0 - options.i) / 180.0 * np.pi  # i =90 => edge-on
-        inc = options.phi / 180.0 * np.pi
-        M_rot_phi = np.array([[np.cos(phi), -np.sin(phi), 0],
-                              [np.sin(phi), np.cos(phi), 0],
-                              [0, 0, 1]])
-        M_rot_inc = np.array([[1, 0, 0],
-                              [0, np.cos(inc), -np.sin(inc)],
-                              [0, np.sin(inc), np.cos(inc)]])
-        M_rot = np.dot(M_rot_phi, M_rot_inc)
-    # positions and velocities in mock obs system
-    xpart = np.dot(M_rot, xpart_axis.T).T
-    vpart = np.dot(M_rot, vpart_axis.T).T
+        xpart = xpart_star
+        vpart = vpart_star
 
     boxsize_img = ui.boxsize_img
     scale_img = ui.scale_img
