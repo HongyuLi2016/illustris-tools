@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, glob, math, time
+import os, sys, math
 from optparse import OptionParser
 
 import numpy as np
@@ -84,6 +84,8 @@ def gh_gaussian(v, meanv, sigma):
 
 if __name__ == '__main__':
     parser = OptionParser()
+    parser.add_option('-f', action='store_true', dest='fit',
+                      default=False, help='oblate rotation')
     (options, args) = parser.parse_args()
     if len(args) != 1:
         print 'Error - please provide a folder name'
@@ -147,10 +149,10 @@ if __name__ == '__main__':
 
     particle_bins = np.zeros(num_particles, dtype=int)
     for i in xrange(num_particles):
-        # bin assuming los is Y axis
-        if inhullminmax(X[i], Z[i], hull_points, hull_minR, hull_maxR,
+        # bin assuming los is Z axis
+        if inhullminmax(X[i], Y[i], hull_points, hull_minR, hull_maxR,
                         hull_xmin, hull_xmax, hull_ymin, hull_ymax):
-            data_point = [X[i], Z[i]]
+            data_point = [X[i], Y[i]]
             distance, bindex = ifu_tree.query(data_point)
             particle_bins[i] = bindex
         else:
@@ -159,7 +161,7 @@ if __name__ == '__main__':
     inbin_mask = particle_bins >= 0
 
     inbin_bin  = particle_bins[inbin_mask]
-    inbin_VY   = VY[inbin_mask]
+    inbin_VZ   = VZ[inbin_mask]
     inbin_M    = M[inbin_mask]
     inbin_L    = L[inbin_mask]
     inbin_Metal= Metal[inbin_mask]
@@ -173,8 +175,10 @@ if __name__ == '__main__':
         # create the velocity histogram
 
         vrange = [-800.0, 800.0]
-        inbin_velocity = inbin_VY[this_bin_mask]
+        inbin_velocity = inbin_VZ[this_bin_mask]
         inbin_Mwt      = inbin_M[this_bin_mask]
+        vel_mean = np.average(inbin_velocity, weights=inbin_Mwt)
+        vel_sigma = np.std(inbin_velocity)
         hist, bin_edges = np.histogram(inbin_velocity, range=vrange, bins=50,
                                        normed=True, weights=inbin_Mwt)
         edges = np.array([0.5 * (bin_edges[i+1] + bin_edges[i])
@@ -188,9 +192,9 @@ if __name__ == '__main__':
 
         # fit G-H series to the histogrammed data using curve_fit from scipy
         # LHY variables with suffix g is add by lhy to fit a pure gaussian LOSVD
-
-        p0 = [np.mean(edges), np.std(edges), 0.0, 0.0]
-        p0g = [np.mean(edges), np.std(edges)]
+        # print mean_lhy, np.mean(edges), sigma_lhy, np.std(edges)
+        p0 = [vel_mean, vel_sigma, 0.0, 0.0]
+        p0g = [vel_mean, vel_sigma]
         try:
             popt, pcov = curve_fit(gh_series, edges, hist, p0, maxfev=1500)
             poptg, pcovg = curve_fit(gh_gaussian, edges, hist, p0g, maxfev=1500)
@@ -219,10 +223,16 @@ if __name__ == '__main__':
         # calculate metalicity
         inthisbin_Metal  = inbin_Metal[this_bin_mask]
         massMetal = (inthisbin_Metal * inbin_Mwt).sum()
+        if options.fit:
+            vel_g = poptg[0]
+            disp_g = poptg[1]
+        else:
+            vel_g = vel_mean
+            disp_g = vel_sigma
         IFU_data.write('{:3d} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}'
                        ' {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}\n'.format(
                            bin_index, popt[0], perr[0], popt[1], perr[1],
-                           popt[2], perr[2], popt[3], perr[3], poptg[0],
-                           perrg[0], poptg[1], perrg[1], massMetal))
+                           popt[2], perr[2], popt[3], perr[3], vel_g,
+                           perrg[0], disp_g, perrg[1], massMetal))
 
     IFU_data.close()
