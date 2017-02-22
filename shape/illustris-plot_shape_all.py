@@ -57,28 +57,32 @@ def plot_all_main(path):
     fig_dot = plt.figure(figsize=(4, 4))
     fig_dot.subplots_adjust(left=0.14, bottom=0.12, right=0.97, top=0.97)
     ax_dot = fig_dot.add_subplot(111)
-    norm = colors.Normalize(vmin=(0.0), vmax=(3.0))
+    index = 0.3
+    norm = colors.Normalize(vmin=(0.0), vmax=(3.0**index))
     text_x, text_y = 0.1, 0.9
     for i in range(len(flist)):
         fname = '{}-{}'.format(flist['snap'][i], flist['ID'][i])
         z = ui.snap2z(int(flist['snap'][i][4:]))
         snap = flist['snap'][i][4:]
-        with open('{}/{}/shape/shape.dat'.format(path, fname), 'rb') as f:
-            data = pickle.load(f)
-        Rstar = data['Rstar']
-        hmr_star = data['hmr_star']
-        axisRatiosStar = data['axisRatiosStar']
-        # eigenVectorsStar = data['eigenVectorsStar']
-        # Rdark = data['Rdark']
-        # hmr_dark = data['hmr_dark']
-        # axisRatiosDark = data['axisRatiosDark']
-        # eigenVectorsDark = data['eigenVectorsDark']
-        plot_shape_dot(Rstar, axisRatiosStar, axes=ax_dot, color=sauron(norm(z)))
-        n = 4
-        shift_x = 0.1 * (i%n)
-        shift_y = 0.1 * (i//n)
-        ax_dot.text(text_x+shift_x, text_y-shift_y, snap, color=sauron(norm(z)),
-                    transform=ax_dot.transAxes, fontproperties=util_fig.text_font)
+        try:
+            with open('{}/{}/shape/shape.dat'.format(path, fname), 'rb') as f:
+                data = pickle.load(f)
+            Rstar = data['Rstar']
+            hmr_star = data['hmr_star']
+            axisRatiosStar = data['axisRatiosStar']
+            # eigenVectorsStar = data['eigenVectorsStar']
+            # Rdark = data['Rdark']
+            # hmr_dark = data['hmr_dark']
+            # axisRatiosDark = data['axisRatiosDark']
+            # eigenVectorsDark = data['eigenVectorsDark']
+            plot_shape_dot(Rstar, axisRatiosStar, axes=ax_dot, color=sauron(norm(z**index)))
+            n = 4
+            shift_x = 0.1 * (i%n)
+            shift_y = 0.1 * (i//n)
+            ax_dot.text(text_x+shift_x, text_y-shift_y, snap, color=sauron(norm(z**index)),
+                        transform=ax_dot.transAxes, fontproperties=util_fig.text_font)
+        except:
+            pass
     ax_dot.set_xlabel('b/a', fontproperties=util_fig.label_font)
     ax_dot.set_ylabel('c/a', fontproperties=util_fig.label_font)
     lim_dot = np.array([0, 1])
