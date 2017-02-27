@@ -16,7 +16,7 @@ util_fig.ticks_font.set_size('x-small')
 
 # global parameters
 boxsize_img = 50.0
-scale_img = 0.25  # pixel2kpc
+scale_img = 0.5  # pixel2kpc
 boxsize_ifu = 50.0
 scale_ifu = 0.31
 kpc2arcsec = 1.612
