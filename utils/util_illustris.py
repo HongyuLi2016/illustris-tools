@@ -186,8 +186,8 @@ class cutout(object):
         with h5py.File(fname, 'r') as f:
             data_dark = f['PartType1']
             data_star = f['PartType4']
-            self.numDark = len(data_dark['ParticleIDs'][:])
-            self.numStar = len(data_star['ParticleIDs'][:])
+            self.numDark = len(data_dark['Coordinates'][:][:, 0])
+            self.numStar = len(data_star['Coordinates'][:][:, 0])
             self.Mdark = np.log10(self.numDark * MdarkPart)
             self.Mstar = np.log10(data_star['Masses'][:].sum()*massUnit)
             self.xpart_star = data_star['Coordinates'][:]
@@ -196,7 +196,7 @@ class cutout(object):
             self.vpart_dark = data_dark['Velocities'][:]
             self.mass_star = data_star['Masses'][:] * massUnit
             self.mass_dark = MdarkPart * \
-                np.ones_like(data_dark['ParticleIDs'][:], dtype=float)
+                np.ones_like(data_dark['Coordinates'][:][:, 0], dtype=float)
 
 
 def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,

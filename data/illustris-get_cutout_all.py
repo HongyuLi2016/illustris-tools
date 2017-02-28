@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-'''
-Download a particle cut out file for a given ID and snapshot
-Small: instead of downloading all the field, just download the
-stellar and dark matter particle position, velocity, mass and
-metallicity
-'''
 from optparse import OptionParser
 import util_illustris as ui
 import sys
@@ -43,9 +37,6 @@ with open('snap{}-subhalo{}/info.dat'.format(snapNum, subID), 'wb') as f:
 with open('snap{}-subhalo{}/haloInfo.dat'.format(snapNum, subID), 'wb') as f:
     pickle.dump(haloInfo_dict, f)
 
-params = {'stars': 'Coordinates,Velocities,Masses,GFM_Metallicity,'
-          'GFM_StellarPhotometrics',
-          'dm': 'Coordinates,Velocities'}
 success = False
 try_num = 0
 f = open('snap{}-subhalo{}/download.log'.format(snapNum, subID), 'w')
@@ -54,7 +45,7 @@ while not success:
         if try_num > 5:
             break
         try_num += 1
-        saved_filename = ui.http_get(cutout_url, params)
+        saved_filename = ui.http_get(cutout_url)
         success = True
         os.system('mv {} snap{}-subhalo{}/cutout.hdf5'
                   .format(saved_filename, snapNum, subID))
