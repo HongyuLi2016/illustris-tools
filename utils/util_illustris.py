@@ -106,12 +106,13 @@ def vel_center(xpart, vpart, mpart=None, R=15.0):
     return np.average(vpart[iIn], weights=mpart[iIn], axis=0)
 
 
-def find_center(xpart, mpart=None, percent=20.0):
+def find_center(xpart, mpart=None, percent=20.0, imax=100):
     if mpart is None:
         mpart = np.ones(xpart.shape[0], dtype=float)
     xcenter_old = np.average(xpart, axis=0, weights=mpart)
     deltaD = 10.0
     # iteratively find out the mass center
+    i = 0
     while deltaD > 0.01:
         r = np.sqrt((xpart[:, 0]-xcenter_old[0])**2 +
                     (xpart[:, 1]-xcenter_old[1])**2 +
@@ -121,6 +122,10 @@ def find_center(xpart, mpart=None, percent=20.0):
             np.average(xpart[iIn, :], axis=0, weights=mpart[iIn])
         deltaD = np.sum((xcenter_new - xcenter_old)**2)**0.5
         xcenter_old = xcenter_new
+        i += 1
+        if i > imax:
+            print 'Warning - find center reach maximum iteration'
+            break
     return xcenter_new
 
 
