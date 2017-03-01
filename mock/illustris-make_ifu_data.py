@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
         Lv = gh_series(edgesplot, popt[0], popt[1], popt[2], popt[3])
         Lvg = gh_gaussian(edgesplot, poptg[0], poptg[1])
-
+        '''
         plt.title('Subhalo = {0} - los velocity distribution, bin = {1}'
                   .format(path, bin_index))
         plt.xlabel('Los velocity (km/s)')
@@ -219,7 +219,7 @@ if __name__ == '__main__':
         plt.xlim(vrange)
         plt.savefig('{0}/ifu/kenimatic_fit/zzz_{1:03d}'.format(path, bin_index))
         plt.clf()
-
+        '''
         # calculate metalicity
         inthisbin_Metal  = inbin_Metal[this_bin_mask]
         massMetal = (inthisbin_Metal * inbin_Mwt).sum()

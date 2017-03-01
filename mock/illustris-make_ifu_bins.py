@@ -29,6 +29,8 @@ def get_re(sol):
 
 if __name__ == '__main__':
     parser = OptionParser()
+    parser.add_option('-c', action='store_true', dest='circle',
+                      default=False, help='use circlular aperture')
     (options, args) = parser.parse_args()
     if len(args) != 1:
         print 'Error - please provide a folder name'
@@ -78,7 +80,9 @@ if __name__ == '__main__':
 
     Xbin = np.cos(theta)*X+np.sin(theta)*Y
     Ybin = -np.sin(theta)*X+np.cos(theta)*Y
-
+    if options.circle:
+        aa = Re
+        bb = Re
     R = ((Xbin/aa)**2+(Ybin/bb)**2)**0.5
     ii = (R < 2.5)  # *(~(((Xbin+73.0)**2 + (Ybin+15.0)**2)**0.5<15.0))
     xbin = X[ii].reshape(-1)  # x position for each spaxel
