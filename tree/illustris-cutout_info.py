@@ -74,7 +74,7 @@ if options.rotate:
 
 fig_star, axes_star = ui.cutout_vel_vector(xpart_star, vpart_star, mpart_star,
                                            alpha=0.7, headlength=6.0, box=box,
-                                           ifu_bins=50, xmark=xmark_star)
+                                           ifu_bins=50, xmark=xmark_star, magrange=7)
 fig_star.savefig('{}/info/vel_vector_star.png'.format(args[0]), dpi=500)
 
 fig_dark, axes_dark = ui.cutout_vel_vector(xpart_dark, vpart_dark, mpart_dark,
