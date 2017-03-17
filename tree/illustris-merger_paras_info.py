@@ -53,35 +53,17 @@ for i in range(nsnap):
     with open('{}/merger/progenitor2/{}-{}/shape/shape.dat'
               .format(args[0], flist2[i, 0], flist2[i, 1])) as f:
         shape2 = pickle.load(f)
-    cutout1 = ui.cutout('{}/merger/progenitor1/{}-{}/cutout.hdf5'
-                        .format(args[0], flist1[i, 0], flist1[i, 1]))
-    cutout2 = ui.cutout('{}/merger/progenitor2/{}-{}/cutout.hdf5'
-                        .format(args[0], flist2[i, 0], flist2[i, 1]))
     mstar1[i] = data1['Subhalo']['SubhaloMassType'][4] * ui.massUnit
     mdark1[i] = data1['Subhalo']['SubhaloMassType'][1] * ui.massUnit
     pos1[i, :] = np.array(data1['Subhalo']['SubhaloPos']) * a / ui.h0
-    hmr1 = data1['Subhalo']['SubhaloHalfmassRadType'][4] * a / ui.h0
-
-    vpart_star1 = cutout1.vpart_star * np.sqrt(a)
-    xpart_star1 = cutout1.xpart_star * a / ui.h0
-    mpart_star1 = cutout1.mass_star
-    vcenter_star1 = ui.vel_center(xpart_star1-pos1[i, :], vpart_star1,
-                                  mpart=mpart_star1, R=hmr1*0.5)
-    vel1[i, :] = vcenter_star1
+    vel1[i, :] = data1['Subhalo']['SubhaloVel']
     orient_star1[i, :, :, :] = shape1['eigenVectorsStar']
     orient_dark1[i, :, :, :] = shape1['eigenVectorsDark']
 
     mstar2[i] = data2['Subhalo']['SubhaloMassType'][4] * ui.massUnit
     mdark2[i] = data2['Subhalo']['SubhaloMassType'][1] * ui.massUnit
     pos2[i, :] = np.array(data2['Subhalo']['SubhaloPos']) * a / ui.h0
-    hmr2 = data2['Subhalo']['SubhaloHalfmassRadType'][4] * a / ui.h0
-
-    vpart_star2 = cutout2.vpart_star * np.sqrt(a)
-    xpart_star2 = cutout2.xpart_star * a / ui.h0
-    mpart_star2 = cutout2.mass_star
-    vcenter_star2 = ui.vel_center(xpart_star2-pos2[i, :], vpart_star2,
-                                  mpart=mpart_star2, R=hmr2*0.5)
-    vel2[i, :] = vcenter_star2
+    vel2[i, :] = data2['Subhalo']['SubhaloVel']
     orient_star2[i, :, :, :] = shape2['eigenVectorsStar']
     orient_dark2[i, :, :, :] = shape2['eigenVectorsDark']
 mratio_star = mstar1 / mstar2
