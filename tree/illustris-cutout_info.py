@@ -4,6 +4,7 @@ import util_illustris as ui
 import sys
 import os
 import numpy as np
+import pickle
 
 
 parser = OptionParser()
@@ -14,7 +15,7 @@ parser.add_option('-r', action='store_true', dest='rotate',
 parser.add_option('-l', action='store_true', dest='los',
                   default=False, help='make los velocity plot')
 parser.add_option('-c', action='store_true', dest='cmark',
-                  default=False, help='make los velocity plot')
+                  default=False, help='plot a marker for center')
 (options, args) = parser.parse_args()
 if len(args) != 1:
     print 'Error - please provide a folder name'
@@ -29,24 +30,33 @@ box = np.array([[-size, size],
                 [-size, size]]).T
 
 cutout = ui.cutout('{}/cutout.hdf5'.format(args[0]))
+'''
+use info.dat
+'''
+with open('{}/info.dat'.format(args[0])) as f:
+    info = pickle.load(f)
+xcenter_star = np.array(info['Subhalo']['SubhaloPos'])
+xcenter_dark = xcenter_star
+hmr_star = info['Subhalo']['SubhaloHalfmassRadType'][4]
+hmr_dark = info['Subhalo']['SubhaloHalfmassRadType'][1]
+scale = 1.0
 
 vpart_star = cutout.vpart_star
 xpart_star = cutout.xpart_star
 mpart_star = cutout.mass_star
-xcenter_star = ui.find_center(xpart_star, mpart=mpart_star, percent=10)
+# xcenter_star = ui.find_center(xpart_star, mpart=mpart_star, percent=10)
 
 vpart_dark = cutout.vpart_dark
 xpart_dark = cutout.xpart_dark
 mpart_dark = cutout.mass_dark
 
-xcenter_dark = ui.find_center(xpart_dark, mpart=mpart_dark, percent=10)
-
+# xcenter_dark = ui.find_center(xpart_dark, mpart=mpart_dark, percent=10)
 center_offset = xcenter_star - xcenter_dark
 
 vcenter_star = ui.vel_center(xpart_star-xcenter_star, vpart_star,
-                             mpart=mpart_star, R=15)
+                             mpart=mpart_star, R=hmr_star)
 vcenter_dark = ui.vel_center(xpart_dark-xcenter_dark, vpart_dark,
-                             mpart=mpart_dark, R=30)
+                             mpart=mpart_dark, R=hmr_dark)
 vsys_offset = vcenter_star - vcenter_dark
 
 # subtract center position and system velocity (position are based on xstar)
@@ -65,7 +75,7 @@ if not options.cmark:
 i_projection = [(0, 1, 0), (0, 2, 1), (1, 2, 2)]
 if options.rotate:
     ba, ca, angle, Tiv = \
-        ui.get_shape(xpart_star, mpart_star, Rb=20., decrease=True)
+        ui.get_shape(xpart_star, mpart_star, Rb=scale*hmr_star, decrease=True)
     xpart_star = np.dot(Tiv, xpart_star.T).T
     vpart_star = np.dot(Tiv, vpart_star.T).T
     xpart_dark = np.dot(Tiv, xpart_dark.T).T

@@ -411,6 +411,9 @@ def get_shape(x, mpart, Rb=20., decrease=True):
         Tiv = Tiv[order[::-1], :]
     else:
         Tiv = Tiv[order, :]
+    # right hand coordinate
+    if np.dot(Tiv[2, :], np.cross(Tiv[0, :], Tiv[1, :])) < 0:
+        Tiv[1, :] *= -1
     # eigen vectors Vei[:,0] Vei[:,1] Vei[:,2]
     Vei = LA.inv(Tiv)
 

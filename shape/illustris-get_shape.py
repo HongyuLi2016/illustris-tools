@@ -13,6 +13,9 @@ def shape(R, xpart):
     eigenVectors = np.zeros([len(R), 3, 3])
     for i in range(len(R)):
         ba, ca, angle, Tiv = ui.get_shape(xpart, mpart, Rb=R[i])
+        for j in range(3):
+            if Tiv[j, 2] < 0:
+                Tiv[j, :] *= -1
         # eigen vectors Tiv[0, :] Tiv[1, :] Tiv[2, :]
         axisRatios[i, :] = np.array([ba, ca])
         eigenVectors[i, :, :] = Tiv

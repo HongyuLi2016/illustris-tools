@@ -45,8 +45,8 @@ if __name__ == '__main__':
     common_list1 = flist1[in1, :]
     common_list2 = flist2[in2, :]
     with open('{}/merger/progenitor1/select.list'.format(args[0]), 'w') as f:
-        for i in range(5):
+        for i in range(0, 26, 2):
             f.write('{} {}\n'.format(common_list1[i, 0], common_list1[i, 1]))
     with open('{}/merger/progenitor2/select.list'.format(args[0]), 'w') as f:
-        for i in range(5):
+        for i in range(0, 26, 2):
             f.write('{} {}\n'.format(common_list2[i, 0], common_list2[i, 1]))
