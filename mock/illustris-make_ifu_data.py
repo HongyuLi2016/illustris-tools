@@ -179,6 +179,7 @@ if __name__ == '__main__':
         inbin_Mwt      = inbin_M[this_bin_mask]
         vel_mean = np.average(inbin_velocity, weights=inbin_Mwt)
         vel_sigma = np.std(inbin_velocity)
+        flux = np.sum(inbin_Mwt)
         hist, bin_edges = np.histogram(inbin_velocity, range=vrange, bins=50,
                                        normed=True, weights=inbin_Mwt)
         edges = np.array([0.5 * (bin_edges[i+1] + bin_edges[i])
@@ -229,10 +230,10 @@ if __name__ == '__main__':
         else:
             vel_g = vel_mean
             disp_g = vel_sigma
-        IFU_data.write('{:3d} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}'
+        IFU_data.write('{:3d} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}'
                        ' {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}\n'.format(
                            bin_index, popt[0], perr[0], popt[1], perr[1],
                            popt[2], perr[2], popt[3], perr[3], vel_g,
-                           perrg[0], disp_g, perrg[1], massMetal))
+                           perrg[0], disp_g, perrg[1], massMetal, flux))
 
     IFU_data.close()

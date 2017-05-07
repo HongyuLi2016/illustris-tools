@@ -14,8 +14,8 @@ def get_angle(vect1, vect2):
     vect2 = vect2 / np.linalg.norm(vect2)
     cosi = np.dot(vect1, vect2)
     angle = np.degrees(np.arccos(cosi))
-    if angle >= 90.0:
-        angle = 180 - angle
+    # if angle >= 90.0:
+    #     angle = 180 - angle
     return angle
 
 
@@ -34,9 +34,11 @@ cs1 = rst['c_star1']
 cs2 = rst['c_star2']
 cd1 = rst['c_dark1']
 cd2 = rst['c_dark2']
+S1 = rst['spinVector1']
+S2 = rst['spinVector2']
 L = rst['L']
 vectors = {'as1': as1, 'as2': as2, 'ad1': ad1, 'ad2': ad2, 'cs1': cs1,
-           'cs2': cs2, 'cd1': cd1, 'cd2': cd2, 'L': L}
+           'cs2': cs2, 'cd1': cd1, 'cd2': cd2, 'L': L, 'S1': S1, 'S2':S2}
 names = itertools.combinations(vectors.keys(), 2)
 angles = {}
 for name in names:

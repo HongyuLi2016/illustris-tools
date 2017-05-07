@@ -15,10 +15,10 @@ warnings.simplefilter("ignore")
 util_fig.ticks_font.set_size('x-small')
 
 # global parameters
-boxsize_img = 50.0
+boxsize_img = 500.0
 scale_img = 0.5  # pixel2kpc
-boxsize_ifu = 50.0
-scale_ifu = 0.31
+boxsize_ifu = 500.0
+scale_ifu = 1.00
 kpc2arcsec = 1.612
 h0 = 0.704
 massUnit = 1e10/h0
@@ -259,10 +259,20 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
     axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
     return fig, axes
 
+def read_center_mark(fname):
+    cmark = []
+    with open(fname) as f:
+        num_mark = int(f.readline().splitlines()[0])
+        tem_cmark = f.readline().splitlines()[0].split()
+        for i in range(num_mark):
+            cmark.append(tem_cmark[i])
+        pos = np.genfromtxt(fname, skip_header=2)
+    return pos, cmark
+
 
 def cutout_vel_vector(xpart, vpart, mpart, bins=100, ifu_bins=50, box=None,
                       magrange=5, linewidths=0.3, contoursColor='c', xmark=None,
-                      **kwargs):
+                      xmarkColor=None, **kwargs):
     '''
     plot img and vector v feild
     box: 2*3 array, boundary of the box within witch img and vmap will be
@@ -306,7 +316,11 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100, ifu_bins=50, box=None,
         # mark some points
         if xmark is not None:
             xmark = np.atleast_2d(xmark)
-            axes[0, k].plot(xmark[:, i], xmark[:, j], '+r', markersize=5,)
+            if xmarkColor is None:
+                xmarkColor = ['r'] * xmark.shape[0]
+            for cnum in range(xmark.shape[0]):
+                axes[0, k].plot(xmark[cnum, i], xmark[cnum, j], '+',
+                                color=xmarkColor[cnum], markersize=5,)
         # over plot velocity feild
         vel_x1, v1edge_star, v2edge_star = \
             mock_ifu(xpart[:, i], xpart[:, j], vpart[:, i], bins=ifu_bins,
@@ -343,6 +357,21 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100, ifu_bins=50, box=None,
     axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
     axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
     return fig, axes
+
+
+def get_spin(x, v, mpart=None, Rb=20):
+    r = np.sqrt(x[:, 0]**2 + x[:, 1]**2 + x[:, 2]**2)
+    good = r < Rb
+    if mpart is None:
+        mpart = np.ones(len(good))
+    mpart = mpart[good]
+    x = x[good, :]
+    v = v[good, :]
+    Spin = np.dot(mpart.reshape(1, -1), np.cross(x, v, axis=1))[0]
+    spinValue = np.linalg.norm(Spin)
+    spinVector = Spin / spinValue
+    Mpart = mpart.sum()
+    return spinValue, Mpart, spinVector
 
 
 def get_shape(x, mpart, Rb=20., decrease=True):

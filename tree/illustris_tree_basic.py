@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib import colors, colorbar
 import warnings
-
+from JAM.utils import util_fig
+util_fig.ticks_font.set_size(15)
 warnings.simplefilter("ignore")
 
 
@@ -428,6 +429,7 @@ class tree_basic:
         ax.set_aspect(1)
         ax.set_xlim(snapNum[-1]-2, snapNum[0]+2)
         ax.set_ylim(0, 5)
+        util_fig.set_labels(ax)
         for i in range(ii.sum()):
             circle_f = mpatches.Circle((snapNum[i], 1), R[i],
                                        facecolor=cmap(color_f[i]),
@@ -451,33 +453,34 @@ class tree_basic:
                                  normRadius(12.0, R11=R11, R9=R9),
                                  facecolor='k', edgecolor=None, alpha=1,
                                  zorder=1)
-        ax.text(snapNum[-1]+0.6, 4.3, '12')
+        ax.text(snapNum[-1]+0.6, 4.3, '12', fontproperties=util_fig.ticks_font)
         ax.add_patch(circle)
 
         circle = mpatches.Circle((snapNum[-3], 3.5),
                                  normRadius(11.0, R11=R11, R9=R9),
                                  facecolor='k', edgecolor=None, alpha=1,
                                  zorder=1)
-        ax.text(snapNum[-3]+0.6, 4.3, '11')
+        ax.text(snapNum[-3]+0.6, 4.3, '11', fontproperties=util_fig.ticks_font)
         ax.add_patch(circle)
 
         circle = mpatches.Circle((snapNum[-5], 3.5),
                                  normRadius(10.0, R11=R11, R9=R9),
                                  facecolor='k', edgecolor=None, alpha=1,
                                  zorder=1)
-        ax.text(snapNum[-5]+0.6, 4.3, '10')
+        ax.text(snapNum[-5]+0.6, 4.3, '10', fontproperties=util_fig.ticks_font)
         ax.add_patch(circle)
         circle = mpatches.Circle((snapNum[-7], 3.5),
                                  normRadius(9.0, R11=R11, R9=R9),
                                  facecolor='k', edgecolor=None, alpha=1,
                                  zorder=1)
-        ax.text(snapNum[-7]+0.6, 4.3, '9')
+        ax.text(snapNum[-7]+0.6, 4.3, '9', fontproperties=util_fig.ticks_font)
         ax.add_patch(circle)
         ax.set_yticklabels([])
         ax.axvline(85.0, linestyle='dashed', color='r', lw=3.0)
         ax.axvline(103.0, linestyle='dashed', color='r', lw=3.0)
         axc = fig.add_axes([0.3, 0.79, 0.35, 0.11])
+        util_fig.set_labels(axc)
         axc.set_yticklabels([])
         colorbar.ColorbarBase(axc, cmap=cmap, norm=norm,
                               orientation='horizontal')
-        fig.savefig('{}/mpbTree.png'.format(outpath), dpi=500)
+        fig.savefig('{}/mpbTree.pdf'.format(outpath), dpi=500)

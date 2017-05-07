@@ -6,7 +6,7 @@ import os
 import sys
 import pickle
 
-def get_angle(vect1, vect2):
+def get_angle(vect1, vect2, acute=True):
     '''
     Calculate the angle between 2 vectors
     '''
@@ -14,8 +14,9 @@ def get_angle(vect1, vect2):
     vect2 = vect2 / np.linalg.norm(vect2)
     cosi = np.dot(vect1, vect2)
     angle = np.degrees(np.arccos(cosi))
-    if angle >= 90.0:
-        angle = 180 - angle
+    if acute:
+        if angle >= 90.0:
+            angle = 180 - angle
     return angle
 
 parser = OptionParser()
@@ -37,6 +38,10 @@ pos1 = np.zeros([nsnap, 3])
 pos2 = np.zeros([nsnap, 3])
 vel1 = np.zeros([nsnap, 3])
 vel2 = np.zeros([nsnap, 3])
+spinValue_star1 = np.zeros([nsnap, 30])
+spinValue_star2 = np.zeros([nsnap, 30])
+spinVector_star1 = np.zeros([nsnap, 30, 3])
+spinVector_star2 = np.zeros([nsnap, 30, 3])
 orient_star1 = np.zeros([nsnap, 30, 3, 3])
 orient_star2 = np.zeros([nsnap, 30, 3, 3])
 orient_dark1 = np.zeros([nsnap, 100, 3, 3])
@@ -49,6 +54,10 @@ a_dark1 = np.zeros([nsnap, 3])
 a_dark2 = np.zeros([nsnap, 3])
 c_dark1 = np.zeros([nsnap, 3])
 c_dark2 = np.zeros([nsnap, 3])
+spinVector1 = np.zeros([nsnap, 3])
+spinVector2 = np.zeros([nsnap, 3])
+spinValue1 = np.zeros(nsnap)
+spinValue2 = np.zeros(nsnap)
 orbit_plane = np.zeros([nsnap-1, 3])
 for i in range(nsnap):
     z = ui.snap2z(int(flist1[i, 0][4:]))
@@ -65,6 +74,12 @@ for i in range(nsnap):
     with open('{}/merger/progenitor2/{}-{}/shape/shape.dat'
               .format(args[0], flist2[i, 0], flist2[i, 1])) as f:
         shape2 = pickle.load(f)
+    with open('{}/merger/progenitor1/{}-{}/spin/spin.dat'
+              .format(args[0], flist1[i, 0], flist1[i, 1])) as f:
+        spin1 = pickle.load(f)
+    with open('{}/merger/progenitor2/{}-{}/spin/spin.dat'
+              .format(args[0], flist2[i, 0], flist2[i, 1])) as f:
+        spin2 = pickle.load(f)
     cutout1 = ui.cutout('{}/merger/progenitor1/{}-{}/cutout.hdf5'
                         .format(args[0], flist1[i, 0], flist1[i, 1]))
     cutout2 = ui.cutout('{}/merger/progenitor2/{}-{}/cutout.hdf5'
@@ -82,6 +97,8 @@ for i in range(nsnap):
     vel1[i, :] = vcenter_star1
     orient_star1[i, :, :, :] = shape1['eigenVectorsStar']
     orient_dark1[i, :, :, :] = shape1['eigenVectorsDark']
+    spinValue_star1[i, :] = spin1['spinValueStar']
+    spinVector_star1[i, :, :] = spin1['spinVectorsStar']
 
     mstar2[i] = data2['Subhalo']['SubhaloMassType'][4] * ui.massUnit
     mdark2[i] = data2['Subhalo']['SubhaloMassType'][1] * ui.massUnit
@@ -96,6 +113,8 @@ for i in range(nsnap):
     vel2[i, :] = vcenter_star2
     orient_star2[i, :, :, :] = shape2['eigenVectorsStar']
     orient_dark2[i, :, :, :] = shape2['eigenVectorsDark']
+    spinValue_star2[i, :] = spin2['spinValueStar']
+    spinVector_star2[i, :, :] = spin2['spinVectorsStar']
 mratio_star = mstar1 / mstar2
 mratio_dark = mdark1 / mdark2
 relative_pos = pos1 - pos2
@@ -116,6 +135,10 @@ Lnorm = np.linalg.norm(L, axis=1)
 for i in range(nsnap):
     L[i, :] /= Lnorm[i]
     Lnorm[i] *= (mstar1[i]*mstar2[i])/(mstar1[i]+mstar2[i])/1e10
+    spinValue1[i] = spinValue_star1[i, 11]
+    spinVector1[i, :] = spinVector_star1[i, 11, :]
+    spinValue2[i] = spinValue_star2[i, 11]
+    spinVector2[i, :] = spinVector_star2[i, 11, :]
     a_star1[i, :] = orient_star1[i, 11, 0, :]
     a_star2[i, :] = orient_star2[i, 11, 0, :]
     c_star1[i, :] = orient_star1[i, 11, 2, :]
@@ -139,15 +162,24 @@ rst['a_dark1'] = a_dark1
 rst['a_dark2'] = a_dark2
 rst['c_dark1'] = c_dark1
 rst['c_dark2'] = c_dark2
+rst['orbit_plane'] = orbit_plane
+rst['spinValue1'] = spinValue1
+rst['spinVector1'] = spinVector1
+rst['spinValue2'] = spinValue2
+rst['spinVector2'] = spinVector2
 cs12 = np.zeros(nsnap)
 as12 = np.zeros(nsnap)
 cd12 = np.zeros(nsnap)
 ad12 = np.zeros(nsnap)
+LS1 = np.zeros(nsnap)
+LS2 = np.zeros(nsnap)
 for i in range(nsnap):
     cs12[i] = get_angle(c_star1[i, :], c_star2[i, :])
     as12[i] = get_angle(a_star1[i, :], a_star2[i, :])
     cd12[i] = get_angle(c_dark1[i, :], c_dark2[i, :])
     ad12[i] = get_angle(a_dark1[i, :], a_dark2[i, :])
+    LS1[i] = get_angle(L[i, :], spinVector1[i, :], acute=False)
+    LS2[i] = get_angle(L[i, :], spinVector2[i, :], acute=False)
 
 with open('{}/merger/orbit.dat'.format(args[0]), 'wb') as f:
     pickle.dump(rst, f)
@@ -165,13 +197,20 @@ with open('{}/merger/orbit.txt'.format(args[0]), 'w') as f:
                         relative_pos[i, 1], relative_pos[i, 2], r[i]))
 
 with open('{}/merger/plane.txt'.format(args[0]), 'w') as f:
-    f.write('{:16s}  {:>5s}  {:>5s}  {:>5s}   {:>5s}  {:>5s}  {:>5s} {:>5s}\n'
-            .format('snapID', 'P1', 'P2', 'P3', 'L1', 'L2', 'L3', 'r'))
+    f.write('{:16s}  {:>5s}  {:>5s}  {:>5s}   {:>5s}  {:>5s}  {:>5s}   {:>5s}'
+            '  {:>5s}  {:>5s}   {:>5s}  {:>5s}  {:>5s}  {:>5s} {:>5s} {:>5s}\n'
+            .format('snapID', 'P1', 'P2', 'P3', 'L1', 'L2', 'L3',
+                    'S11', 'S12', 'S13', 'S21', 'S22', 'S23', 'r', 'LS1', 'LS2'))
     for i in range(nsnap-1):
         temID = '{}-{}'.format(flist1[i, 0], flist1[i+1, 0])
-        f.write('{:16s} [{:5.2f}, {:5.2f}, {:5.2f}] [{:5.2f}, {:5.2f}, {:5.2f}] {:5.0f}\n'
+        f.write('{:16s} [{:5.2f}, {:5.2f}, {:5.2f}] [{:5.2f}, {:5.2f}, {:5.2f}] '
+                '[{:5.2f}, {:5.2f}, {:5.2f}] [{:5.2f}, {:5.2f}, {:5.2f}] {:5.0f} '
+                '{:5.0f} {:5.0f}\n'
                 .format(temID, orbit_plane[i, 0], orbit_plane[i, 1],
-                        orbit_plane[i, 2], L[i, 0], L[i, 1], L[i, 2], r[i]))
+                        orbit_plane[i, 2], L[i, 0], L[i, 1], L[i, 2],
+                        spinVector1[i, 0], spinVector1[i, 1], spinVector1[i, 2],
+                        spinVector2[i, 0], spinVector2[i, 1], spinVector2[i, 2],
+                        r[i], LS1[i], LS2[i]))
 
 with open('{}/merger/angle_star.txt'.format(args[0]), 'w') as f:
     f.write('{:8s} {:>7s} {:>7s}  {:>5s}  {:>5s}  {:>5s}   {:>5s}  {:>5s}  {:>5s}  {:>5s}  '

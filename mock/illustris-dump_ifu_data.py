@@ -42,6 +42,7 @@ if __name__ == '__main__':
     vd = ifu_data[:, 11]
     vd_err = ifu_data[:, 12]
     metal = ifu_data[:, 13]
+    flux = ifu_data[:, 14]
 
     c1 = pyfits.Column(name='xbin', format='D', array=bin_X)
     c2 = pyfits.Column(name='ybin', format='D', array=bin_Y)
@@ -54,13 +55,14 @@ if __name__ == '__main__':
     c9 = pyfits.Column(name='h4', format='D', array=gh_h4)
     c10 = pyfits.Column(name='h4_err', format='D', array=gh_h4_err)
     c11 = pyfits.Column(name='metal', format='D', array=metal)
+    c12 = pyfits.Column(name='flux', format='D', array=flux)
 
-    c12 = pyfits.Column(name='rebin_x', format='D', array=spax_bin_X)
-    c13 = pyfits.Column(name='rebin_y', format='D', array=spax_bin_Y)
-    c14 = pyfits.Column(name='binid', format='D', array=spax_bin_id)
+    c13 = pyfits.Column(name='rebin_x', format='D', array=spax_bin_X)
+    c14 = pyfits.Column(name='rebin_y', format='D', array=spax_bin_Y)
+    c15 = pyfits.Column(name='binid', format='D', array=spax_bin_id)
 
-    coldefs1 = pyfits.ColDefs([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11])
-    coldefs2 = pyfits.ColDefs([c12, c13, c14])
+    coldefs1 = pyfits.ColDefs([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12])
+    coldefs2 = pyfits.ColDefs([c13, c14, c15])
     hdu = pyfits.PrimaryHDU()
     tbhdu1 = pyfits.BinTableHDU.from_columns(coldefs1)
     tbhdu2 = pyfits.BinTableHDU.from_columns(coldefs2)
@@ -74,12 +76,13 @@ if __name__ == '__main__':
     c5 = pyfits.Column(name='vd', format='D', array=vd)
     c6 = pyfits.Column(name='vd_err', format='D', array=vd_err)
     c7 = pyfits.Column(name='metal', format='D', array=metal)
+    c8 = pyfits.Column(name='flux', format='D', array=flux)
 
     c12 = pyfits.Column(name='rebin_x', format='D', array=spax_bin_X)
     c13 = pyfits.Column(name='rebin_y', format='D', array=spax_bin_Y)
     c14 = pyfits.Column(name='binid', format='D', array=spax_bin_id)
 
-    coldefs1 = pyfits.ColDefs([c1, c2, c3, c4, c5, c6, c7])
+    coldefs1 = pyfits.ColDefs([c1, c2, c3, c4, c5, c6, c7, c8])
     coldefs2 = pyfits.ColDefs([c12, c13, c14])
     hdu = pyfits.PrimaryHDU()
     tbhdu1 = pyfits.BinTableHDU.from_columns(coldefs1)
