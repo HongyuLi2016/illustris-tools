@@ -15,9 +15,9 @@ warnings.simplefilter("ignore")
 util_fig.ticks_font.set_size('x-small')
 
 # global parameters
-boxsize_img = 500.0
+boxsize_img = 200.0
 scale_img = 0.5  # pixel2kpc
-boxsize_ifu = 500.0
+boxsize_ifu = 200.0
 scale_ifu = 1.00
 kpc2arcsec = 1.612
 h0 = 0.704
@@ -197,6 +197,20 @@ class cutout(object):
             self.mass_star = data_star['Masses'][:] * massUnit
             self.mass_dark = MdarkPart * \
                 np.ones_like(data_dark['Coordinates'][:][:, 0], dtype=float)
+
+
+def read_Dandan(snap, key, path='/share/data/D/lhy/paper4/Dandan_catalogue'):
+    if snap == 135:
+        if key == 'subfindID':
+            with h5py.File('{}/snap135.hdf5'.format(path), 'r') as f:
+                return (f['FID'][:] + f['SID'][:]).astype(int)[:, 0]
+        else:
+            with h5py.File('{}/snap135.hdf5'.format(path), 'r') as f:
+                return f[key][:][:, 0]
+    else:
+        with h5py.File('{}/snaps.hdf5'.format(path), 'r') as f:
+            snapID = 'Snapshot_{}'.format(snap)
+            return f[snapID][key][:][:, 0]
 
 
 def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
