@@ -420,7 +420,7 @@ class tree_basic:
         norm = colors.Normalize(vmin=0.0, vmax=0.2)
         color_f = norm(fgas)
         color_n = norm(fgasNext)
-        cmap = plt.get_cmap('seismic')
+        cmap = plt.get_cmap('seismic_r')
         plt.clf()
         fig = plt.figure(figsize=[ii.sum()/3.-4.0, 5./3.])
         fig.subplots_adjust(left=0.01, bottom=0.15, right=0.99,
