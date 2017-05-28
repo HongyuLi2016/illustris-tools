@@ -1,6 +1,6 @@
 # illustris-tools
-Utilities for downloading and analyzing illustris data.  
-See [Illustris website](http://illustris-project.org/) for more infomation about the data format.
+Utilities for downloading and analyzing the illustris cosmological simulation data.  
+See [Illustris website](http://illustris-project.org/) for more infomation about the simulation and the data format.
 
 ### Contents
 * `data`: download cutout file for subhalo, halo and merger tree.
