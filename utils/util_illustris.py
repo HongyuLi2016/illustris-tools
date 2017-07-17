@@ -15,9 +15,11 @@ warnings.simplefilter("ignore")
 util_fig.ticks_font.set_size('x-small')
 
 # global parameters
-boxsize_img = 200.0
+boxsize_img = 80.0
+boxsize_dark = 150
 scale_img = 0.5  # pixel2kpc
-boxsize_ifu = 200.0
+scale_dark = 1.0
+boxsize_ifu = 80.0
 scale_ifu = 1.00
 kpc2arcsec = 1.612
 h0 = 0.704
@@ -124,7 +126,7 @@ def find_center(xpart, mpart=None, percent=20.0, imax=100):
         xcenter_old = xcenter_new
         i += 1
         if i > imax:
-            print 'Warning - find center reach maximum iteration'
+            print('Warning - find center reach maximum iteration')
             break
     return xcenter_new
 
@@ -269,9 +271,12 @@ def cutout_vel_los(xpart, vpart, mpart, bins=100, box=None, magrange=5,
         util_fig.set_labels(axes[1, k], xrotate=45)
         axes[1, k].set_xlabel(r'$\rm cKpc/h_0$',
                               fontproperties=util_fig.label_font)
-    axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
-    axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
+    axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$',
+                          fontproperties=util_fig.label_font)
+    axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$',
+                          fontproperties=util_fig.label_font)
     return fig, axes
+
 
 def read_center_mark(fname):
     cmark = []
@@ -285,8 +290,8 @@ def read_center_mark(fname):
 
 
 def cutout_vel_vector(xpart, vpart, mpart, bins=100, ifu_bins=50, box=None,
-                      magrange=5, linewidths=0.3, contoursColor='c', xmark=None,
-                      xmarkColor=None, **kwargs):
+                      magrange=5, linewidths=0.3, contoursColor='c',
+                      xmark=None, xmarkColor=None, **kwargs):
     '''
     plot img and vector v feild
     box: 2*3 array, boundary of the box within witch img and vmap will be
@@ -368,8 +373,10 @@ def cutout_vel_vector(xpart, vpart, mpart, bins=100, ifu_bins=50, box=None,
         util_fig.set_labels(axes[1, k], xrotate=45)
         axes[1, k].set_xlabel(r'$\rm cKpc/h_0$',
                               fontproperties=util_fig.label_font)
-    axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
-    axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$', fontproperties=util_fig.label_font)
+    axes[0, 0].set_ylabel(r'$\rm cKpc/h_0$',
+                          fontproperties=util_fig.label_font)
+    axes[1, 0].set_ylabel(r'$\rm cKpc/h_0$',
+                          fontproperties=util_fig.label_font)
     return fig, axes
 
 

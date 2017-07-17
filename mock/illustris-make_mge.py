@@ -41,10 +41,10 @@ if __name__ == '__main__':
     kpc2arcsec = ui.kpc2arcsec   # 1 kpc = 1.612 arcsec
     pix2arcsec = pix2kpc * kpc2arcsec   # pixel / arcsec
     level = img[ii].min()
-    level *= 0.10
+    level *= 0.1
     old_img = img.copy()
     # img[55:85,115:145]=0
-    lhy_f = find_galaxy(img, plot=1, fraction=0.1,  # level=level,
+    lhy_f = find_galaxy(img, plot=1, fraction=0.05,  # level=level,
                         quiet=1, path='%s/mge/'%path)
     eps = lhy_f.eps
     theta = lhy_f.theta

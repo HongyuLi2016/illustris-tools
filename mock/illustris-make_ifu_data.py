@@ -223,7 +223,7 @@ if __name__ == '__main__':
         '''
         # calculate metalicity
         inthisbin_Metal  = inbin_Metal[this_bin_mask]
-        massMetal = (inthisbin_Metal * inbin_Mwt).sum()
+        massMetal = (inthisbin_Metal * inbin_Mwt).sum() / inbin_Mwt.sum()
         if options.fit:
             vel_g = poptg[0]
             disp_g = poptg[1]
