@@ -60,10 +60,10 @@ if __name__ == '__main__':
     counts = lhy_s.counts
     qbound = 0.06
     lhy_mge = mge_fit_sectors(radius, angle, counts, eps, ngauss=15,
-                              sigmaPSF=0, scale=pix2arcsec,
+                              sigmapsf=0, scale=pix2arcsec,
                               qbounds=[qbound, 0.999], linear=False, quiet=True,
                               outer_slope=4, bulge_disk=False,
-                              plot=0, debug=False)
+                              plot=0)
     sol = lhy_mge.sol.T
     absdev = lhy_mge.absdev
 
@@ -74,10 +74,10 @@ if __name__ == '__main__':
         while True:
             qbound += 0.05
             lhy_mge = mge_fit_sectors(radius, angle, counts, eps, ngauss=15,
-                                      sigmaPSF=0, scale=pix2arcsec,
+                                      sigmapsf=0, scale=pix2arcsec,
                                       qbounds=[qbound, 0.999], linear=False,
                                       quiet=True, outer_slope=4,
-                                      bulge_disk=False, plot=0, debug=False)
+                                      bulge_disk=False, plot=0)
             sol = lhy_mge.sol.T
             absdev = lhy_mge.absdev
 
