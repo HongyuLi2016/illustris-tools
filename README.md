@@ -12,7 +12,7 @@ Please Note that all the code here only works under __python2__.
   * `illustris-make_ifu_bins.py`: __python illustris-make_ifu_bins.py snap135-subhalo3__ will create Voronoi bins for the IFU data. The output files will be in snap135-subhalo3/ifu
   * `illustris-make_ifu_data.py`: __python illustris-make_ifu_data.py snap135-subhalo3__ will calculate mean velocity, velocity dispersion and their errors for the particles in each Voronoi bin. The output files will be in snap135-subhalo3/ifu
   * `illustris-dump_ifu_data.py`: __python illustris-dump_ifu_data.py snap135-subhalo3__ will dump the IFU data into a fits file IFU.fits in snap135-subhalo3/ifu
-  * `illustris-v_plot.py`: __python illustris-v_plot.py snap135-subhalo3__ will read the IFU.fits file and plot the velocity maps. The output figure will be in snap135-subhalo3/ifu
+  * `illustris-v_plot.py`: __python illustris-v_plot.py snap135-subhalo3__ will read the IFU.fits file and plot the velocity maps. The output figure will be in snap135-subhalo3/ifu
 * `shape`: measure shape at different radii for a subhalo.
 * `tree`: analyze merger tree of a subhalo and plot some basic figures.
 * `utils`: surpport functions for the modelus listed above.
