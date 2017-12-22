@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File              : illustris-make_ifu_data.py
+# Author            : Hongyu Li <lhy88562189@gmail.com>
+# Date              : 22.12.2017
+# Last Modified Date: 22.12.2017
+# Last Modified By  : Hongyu Li <lhy88562189@gmail.com>
 import os, sys, math
 from optparse import OptionParser
 
@@ -10,6 +16,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 from scipy.optimize import curve_fit
 import util_illustris as ui
+from sklearn.utils import resample
 
 
 def inhullminmax(x, y, hull, minl, maxl, xmin, xmax, ymin, ymax):
@@ -84,14 +91,11 @@ def gh_gaussian(v, meanv, sigma):
 
 if __name__ == '__main__':
     parser = OptionParser()
-    parser.add_option('-f', action='store_true', dest='fit',
-                      default=False, help='oblate rotation')
     (options, args) = parser.parse_args()
     if len(args) != 1:
         print 'Error - please provide a folder name'
         sys.exit(1)
     path = args[0]
-    os.system('mkdir -p %s/ifu/kenimatic_fit'%path)
     # read hull_file
     with open('%s/ifu/IFU_hull'%path, 'r') as f:
         ctrl_fields = f.readline().split()
@@ -172,68 +176,49 @@ if __name__ == '__main__':
     for bin_index in xrange(num_ifu_bins):
         this_bin_mask = inbin_bin == bin_index
 
-        # create the velocity histogram
-
-        vrange = [-800.0, 800.0]
         inbin_velocity = inbin_VZ[this_bin_mask]
         inbin_Mwt      = inbin_M[this_bin_mask]
+        # calculate mean velocity and velocity dispersion
         vel_mean = np.average(inbin_velocity, weights=inbin_Mwt)
-        vel_sigma = np.std(inbin_velocity)
+        vel_second = np.average(inbin_velocity**2, weights=inbin_Mwt)
+        vel_sigma = np.sqrt(vel_second - vel_mean**2)
+
+        # estimate error using bootstraping method
+        nbootstrap = 500
+        vel_mean_bootstrap = np.zeros(nbootstrap)
+        vel_sigma_bootstrap = np.zeros(nbootstrap)
+        velocity_index = np.arange(len(inbin_velocity), dtype=int)
+        for i in range(nbootstrap):
+            index_resample = resample(velocity_index)
+            vel_resample = inbin_velocity[index_resample]
+            mass_resample = inbin_Mwt[index_resample]
+            vel_mean_bootstrap[i] = \
+                np.average(vel_resample, weights=mass_resample)
+            vel_second_bootstrap = \
+                np.average(vel_resample**2, weights=mass_resample)
+            vel_sigma_bootstrap[i] = \
+                np.sqrt(vel_second_bootstrap - vel_mean_bootstrap[i]**2)
+        vel_mean_err = np.nanstd(vel_mean_bootstrap)
+        vel_sigma_err = np.nanstd(vel_sigma_bootstrap)
         flux = np.sum(inbin_Mwt)
-        hist, bin_edges = np.histogram(inbin_velocity, range=vrange, bins=50,
-                                       normed=True, weights=inbin_Mwt)
-        edges = np.array([0.5 * (bin_edges[i+1] + bin_edges[i])
-                          for i in xrange(len(bin_edges) - 1)])
-        edgesplot = edges.copy()
-        # remove zero points
 
-        zero_mask = hist != 0.0
-        hist  = hist[zero_mask]
-        edges = edges[zero_mask]
-
-        # fit G-H series to the histogrammed data using curve_fit from scipy
-        # LHY variables with suffix g is add by lhy to fit a pure gaussian LOSVD
-        # print mean_lhy, np.mean(edges), sigma_lhy, np.std(edges)
-        p0 = [vel_mean, vel_sigma, 0.0, 0.0]
-        p0g = [vel_mean, vel_sigma]
-        try:
-            popt, pcov = curve_fit(gh_series, edges, hist, p0, maxfev=1500)
-            poptg, pcovg = curve_fit(gh_gaussian, edges, hist, p0g, maxfev=1500)
-        except RuntimeError:
-            print 'Error - failed processing bin {0}, continuing but check output'.format(bin_index)
-            continue
-        else:
-            perr = np.sqrt(np.diag(pcov))
-            perrg = np.sqrt(np.diag(pcovg))
-
-        Lv = gh_series(edgesplot, popt[0], popt[1], popt[2], popt[3])
-        Lvg = gh_gaussian(edgesplot, poptg[0], poptg[1])
-        '''
-        plt.title('Subhalo = {0} - los velocity distribution, bin = {1}'
-                  .format(path, bin_index))
-        plt.xlabel('Los velocity (km/s)')
-        plt.plot(edges, hist, 'bo', edgesplot, Lv, 'r-', edgesplot, Lvg, 'c-')
-        ymin, ymax = plt.ylim()
-        plt.vlines(popt[0], 0.0, ymax)
-        sigma_lines = [popt[0] - popt[1], popt[0] + popt[1]]
-        plt.vlines(sigma_lines, 0.0, ymax, linestyles='dashed')
-        plt.xlim(vrange)
-        plt.savefig('{0}/ifu/kenimatic_fit/zzz_{1:03d}'.format(path, bin_index))
-        plt.clf()
-        '''
         # calculate metalicity
         inthisbin_Metal  = inbin_Metal[this_bin_mask]
         massMetal = (inthisbin_Metal * inbin_Mwt).sum() / inbin_Mwt.sum()
-        if options.fit:
-            vel_g = poptg[0]
-            disp_g = poptg[1]
-        else:
-            vel_g = vel_mean
-            disp_g = vel_sigma
+        # please ignore these GH moments
+        gh_v0 = 0.0
+        gh_v0_err = 0.0
+        gh_vd = 0.0
+        gh_vd_err = 0.0
+        gh_h3 = 0.0
+        gh_h3_err = 0.0
+        gh_h4 = 0.0
+        gh_h4_err = 0.0
         IFU_data.write('{:3d} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}'
                        ' {:+e} {:+e} {:+e} {:+e} {:+e} {:+e}\n'.format(
-                           bin_index, popt[0], perr[0], popt[1], perr[1],
-                           popt[2], perr[2], popt[3], perr[3], vel_g,
-                           perrg[0], disp_g, perrg[1], massMetal, flux))
+                           bin_index, gh_v0, gh_v0_err, gh_vd, gh_vd_err,
+                           gh_h3, gh_h3_err, gh_h4, gh_h4_err, vel_mean,
+                           vel_mean_err, vel_sigma, vel_sigma_err,
+                           massMetal, flux))
 
     IFU_data.close()

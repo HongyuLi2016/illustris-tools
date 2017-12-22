@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File              : illustris-make_ifu_bins.py
+# Author            : Hongyu Li <lhy88562189@gmail.com>
+# Date              : 22.12.2017
+# Last Modified Date: 22.12.2017
+# Last Modified By  : Hongyu Li <lhy88562189@gmail.com>
 '''
 read img_ifu.npy (particel number map), mge.npy (mge fitting)
 and img_M.npy (mass image) to create voronoi bin for IFU
@@ -65,7 +71,7 @@ if __name__ == '__main__':
         print 'Error - no mge file found'
         sys.exit(1)
 
-    pix2kpc = ui.scale_ifu   # 1 pixel = 0.31 kpc
+    pix2kpc = ui.scale_ifu   # 1 pixel = 1 kpc
     kpc2arcsec = ui.kpc2arcsec
     pix2arcsec = pix2kpc * kpc2arcsec  # pixel / arcsec
     naxis_ifu = img_ifu.shape[0]

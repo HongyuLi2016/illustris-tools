@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File              : illustris-make_mge.py
+# Author            : Hongyu Li <lhy88562189@gmail.com>
+# Date              : 22.12.2017
+# Last Modified Date: 22.12.2017
+# Last Modified By  : Hongyu Li <lhy88562189@gmail.com>
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -37,7 +43,7 @@ if __name__ == '__main__':
     # img[~ii]=0.
     # plt.imshow(np.log10(img))
     # plt.show()
-    pix2kpc = ui.scale_img   # 1 pixel = 0.25 kpc
+    pix2kpc = ui.scale_img   # 1 pixel = 0.5 kpc
     kpc2arcsec = ui.kpc2arcsec   # 1 kpc = 1.612 arcsec
     pix2arcsec = pix2kpc * kpc2arcsec   # pixel / arcsec
     level = img[ii].min()
